@@ -50,39 +50,41 @@ export class FieldControlPanel {
             null,
             this._disposables
         );
-        this.controller =
-            panel.webview.onDidReceiveMessage(
-                message => {
-                    switch (message.command) {
-                        case 'connect':
-                            SerialPort.list().then(function (ports) {
-                                ports.forEach(function (port) {
-                                    if ((port as any).hasOwnProperty("friendlyName")) {
-                                        if ((port as any).friendlyName.includes("VEX V5 Controller Port")) {
-                                            console.log("Vex controller found at port: ", port.path);
-                                            this.controller = new SerialPort({
-                                                path: port.path, baudRate: 115200
-                                            });
-                                        }
+        panel.webview.onDidReceiveMessage(
+            message => {
+                switch (message.command) {
+                    case 'connect':
+                        SerialPort.list().then(function (ports) {
+                            ports.forEach(function (this: FieldControlPanel, port) {
+                                if ((port as any).hasOwnProperty("friendlyName")) {
+                                    if ((port as any).friendlyName.includes("VEX V5 Controller Port")) {
+                                        console.log("Vex controller found at port: ", port.path);
+                                        this.controller = new SerialPort({
+                                            path: port.path, baudRate: 115200
+                                        });
                                     }
-                                });
+                                }
                             });
+                        });
 
-                            return;
-                        case 'autonomous':
-                            this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 10, 0, 0, 0, 0, 146, 124]));
-                            return;
-                        case 'driver':
-                            this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 8, 0, 0, 0, 0, 214, 255]));
-                            return;
-                        case 'disabled':
-                            this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 11, 0, 0, 0, 0, 56, 45]));
-                            return;
-                    }
-                },
-                null,
-                this._disposables
-            );
+                        return;
+                    case 'autonomous':
+                        if (this.controller === undefined) return;
+                        this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 10, 0, 0, 0, 0, 146, 124]));
+                        return;
+                    case 'driver':
+                        if (this.controller === undefined) return;
+                        this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 8, 0, 0, 0, 0, 214, 255]));
+                        return;
+                    case 'disabled':
+                        if (this.controller === undefined) return;
+                        this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 11, 0, 0, 0, 0, 56, 45]));
+                        return;
+                }
+            },
+            null,
+            this._disposables
+        );
     }
     public dispose() {
         FieldControlPanel.currentPanel = undefined;

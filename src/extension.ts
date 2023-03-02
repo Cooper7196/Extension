@@ -9,6 +9,7 @@ import PathGeneratorCommand from './commands/PathGeneratorCommand';
 import CodeGenerator from './modules/gui-setup/codeGenerator';
 import UninstallCommand from './commands/UninstallCommand';
 import InstallCommand from './commands/InstallCommand';
+import FieldControlCommand from './commands/FieldControlCommand';
 
 import * as types from './modules/gui-setup/types';
 
@@ -36,7 +37,7 @@ export async function getLatestVerisonZipUrl(): Promise<string> {
 	return assets[0].browser_download_url;
 }
 
-export async function activate(context: vscode.ExtensionContext) {	
+export async function activate(context: vscode.ExtensionContext) {
 	console.log('LemLib enabled');
 
 	extensionUri = context.extensionUri;
@@ -45,6 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	await registerCommand(new PathGeneratorCommand());
 	await registerCommand(new UninstallCommand());
 	await registerCommand(new InstallCommand());
+	await registerCommand(new FieldControlCommand());
 
 	// for testing
 	new CodeGenerator({
@@ -60,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 				leftMotors: new types.MotorGroup('left_drive', [new types.Motor('left_front_drive', 1, false), new types.Motor('left_middle_drive', 2, false), new types.Motor('left_back_drive', 3, false)]), // left drive
 				rightMotors: new types.MotorGroup('right_drive', [new types.Motor('right_front_drive', 4, true), new types.Motor('right_middle_drive', 5, true), new types.Motor('right_back_drive', 6, true)]), // right drive
-			
+
 				odometry: {
 					uses: 'rotation',
 					trackingWheels: [
@@ -151,7 +153,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	}).saveTo(context.extensionUri.fsPath + '/main.cpp');
 }
 
-export function deactivate() {}
+export function deactivate() { }
 
 export function getExtensionUri() {
 	return extensionUri;
