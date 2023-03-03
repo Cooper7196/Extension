@@ -1,0 +1,46 @@
+#timer {
+  font-family: 'Digital-7';
+  font-size: 6em;
+}
+#controlSplit {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+#controlSplit > div {
+  width: 33%;
+}
+
+#controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+#matchType {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.matchTypeSelector {
+  font-size: 1.4vw;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  user-select: none;
+}
+
+.matchTypeSelector:hover {
+  text-decoration: underline;
+  text-decoration: none;
+  color: rgb(255, 52, 52);
+}
+.matchTypeSelector,
+.matchTypeSelector:focus,
+.matchTypeSelector:active {
+  text-decoration: none;
+  color: inherit;
+}

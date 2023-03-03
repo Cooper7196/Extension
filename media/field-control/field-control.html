@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Field Control</title>
+    <!--HEADERS-->
+</head>
+
+<body>
+    <!--SCRIPTS-->
+    <div id="controls">
+
+        <div>
+            <button id="connect" onclick="connectController()">Connect</button>
+            <button id="disconnect" onclick="disconnectController()" style="display:none;">Disconnect</button>
+        </div>
+        <br><br>
+        <div id="controlSplit">
+            <div id="manualControl" style="text-align:center;">
+                <h1 style="font-size: 1.4vw;">Manual Control</h1>
+                <br>
+                <button id="autonomous" disabled>Autonomous</button>
+                <button id="driver" disabled>Driver Control</button>
+                <button id="disabled" disabled>Disable</button>
+            </div>
+            <h1 id="timer">00 :10</h1>
+
+            <div id="autoControl">
+                <!-- Match type dropdown -->
+                <div id="matchType">
+                    <a class="matchTypeSelector" id="programmingSkills">Programming Skills</a>
+                    <a class="matchTypeSelector" id="driverSkills">Driver Skills</a>
+                    <a class="matchTypeSelector" id="match">Regular Match</a>
+                </div>
+                <br>
+                <button id="matchStart" disabled>Match Start</button>
+                <button id="matchReset" disabled style="display:none;">Reset</button>
+                <button id="matchPause" disabled style="display:none;">Pause</button>
+                <button id="matchResume" disabled style="display:none;">Resume</button>
+            </div>
+        </div>
+</body>
+
+</html>

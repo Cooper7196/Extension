@@ -2,8 +2,9 @@ import * as vscode from 'vscode';
 import { SerialPort } from 'serialport';
 
 
-export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
+export function getWebviewOptions(extensionUri: vscode.Uri): any {
     return {
+        retainContextWhenHidden: true,
         enableScripts: true,
         localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media')]
     };
@@ -54,31 +55,53 @@ export class FieldControlPanel {
             message => {
                 switch (message.command) {
                     case 'connect':
-                        SerialPort.list().then(function (ports) {
-                            ports.forEach(function (this: FieldControlPanel, port) {
-                                if ((port as any).hasOwnProperty("friendlyName")) {
-                                    if ((port as any).friendlyName.includes("VEX V5 Controller Port")) {
-                                        console.log("Vex controller found at port: ", port.path);
-                                        this.controller = new SerialPort({
-                                            path: port.path, baudRate: 115200
-                                        });
+                        if (this.controller === undefined) {
+                            SerialPort.list().then((ports) => {
+                                ports.forEach((port) => {
+                                    if ((port as any).hasOwnProperty("friendlyName")) {
+                                        if ((port as any).friendlyName.includes("VEX V5 Controller Port")) {
+                                            console.log("Vex controller found at port: ", port.path);
+                                            this.controller = new SerialPort({
+                                                path: port.path, baudRate: 115200
+                                            }).on("error", (error) => {
+                                                console.log(error);
+                                                vscode.window.showErrorMessage("Failed to connect to VEX V5 Controller");
+                                                this.controller = undefined;
+                                                return;
+                                            }).on("open", () => {
+                                                this._panel.webview.postMessage({ command: 'onConnected' });
+                                                vscode.window.showInformationMessage("Connected to VEX V5 Controller");
+                                            });
+                                        }
                                     }
-                                }
+                                }, this);
                             });
-                        });
-
+                            return;
+                        }
+                        this._panel.webview.postMessage({ command: 'onConnected' });
+                        vscode.window.showInformationMessage("Connected to VEX V5 Controller");
                         return;
-                    case 'autonomous':
+                    case 'disconnect':
                         if (this.controller === undefined) return;
-                        this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 10, 0, 0, 0, 0, 146, 124]));
+                        this.controller.close();
+                        this.controller = undefined;
+                        this._panel.webview.postMessage({ command: 'onDisconnected' });
+                        vscode.window.showInformationMessage("Disconnected from VEX V5 Controller");
                         return;
-                    case 'driver':
+                    case 'setMode':
                         if (this.controller === undefined) return;
-                        this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 8, 0, 0, 0, 0, 214, 255]));
-                        return;
-                    case 'disabled':
-                        if (this.controller === undefined) return;
-                        this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 11, 0, 0, 0, 0, 56, 45]));
+                        switch (message.mode) {
+                            case 'autonomous':
+                                this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 10, 0, 0, 0, 0, 146, 124]));
+                                return;
+                            case 'driver':
+                                this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 8, 0, 0, 0, 0, 214, 255]));
+                                return;
+                            case 'disabled':
+                                console.log("Disabled");
+                                this.controller.write(new Uint8Array([201, 54, 184, 71, 88, 193, 5, 11, 0, 0, 0, 0, 56, 45]));
+                                return;
+                        }
                         return;
                 }
             },
@@ -95,6 +118,7 @@ export class FieldControlPanel {
             const x = this._disposables.pop();
             if (x) x.dispose();
         }
+        this.controller?.close();
     }
 
     private _update() {
@@ -104,7 +128,7 @@ export class FieldControlPanel {
     }
 
     private _updateForHtml(webview: vscode.Webview) {
-        this._panel.title = 'Path Generator';
+        this._panel.title = 'Field Controller';
         this._panel.webview.html = this._getHtmlForWebview(webview);
     }
     private _getHtmlForWebview(webview: vscode.Webview) {
@@ -117,11 +141,18 @@ export class FieldControlPanel {
 
         const js = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'field-control', 'scripts', 'main.js'));
 
+        const sevenSegmentFont = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'field-control', 'fonts', 'Digital-7 Mono 400.ttf'));
         const nonce = getNonce();
 
         return fs.readFileSync(vscode.Uri.joinPath(this._extensionUri, 'media', 'field-control', 'field-control.html').fsPath, 'utf8')
             .replace(/<!--HEADERS-->/g, `
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
+
+<style>
+@font-face {
+  font-family:"Digital-7";
+  src: url("${sevenSegmentFont}") format("truetype");
+}
+</style>
 
 <link href="${styleResetUri}" rel="stylesheet" />
 <link href="${styleVSCodeUri}" rel="stylesheet" />
